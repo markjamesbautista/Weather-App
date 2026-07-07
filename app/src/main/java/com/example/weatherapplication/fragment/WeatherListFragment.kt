@@ -10,7 +10,9 @@ import com.example.weatherapplication.adapter.WeatherRecyclerViewAdapter
 import com.example.weatherapplication.api.WeatherList
 import com.example.weatherapplication.databinding.FragmentWeatherListBinding
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class WeatherListFragment : Fragment() {
 
     private var _binding: FragmentWeatherListBinding? = null

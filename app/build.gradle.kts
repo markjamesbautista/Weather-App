@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
 
 
@@ -32,11 +34,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 
@@ -51,17 +53,19 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation("io.insert-koin:koin-android:3.2.0")
+    
+    // Hilt - Using KSP to fix JDK 17 compatibility and aligned with root project version
+    val hilt_version = "2.51.1"
+    implementation("com.google.dagger:hilt-android:$hilt_version")
+    ksp("com.google.dagger:hilt-android-compiler:$hilt_version")
+    
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.jakewharton.timber:timber:5.0.1")
-    // Koin Android features
-//    implementation("org.koin:koin-android:4.0.3")
-//    implementation("org.koin:koin-androidx-scope:2.2.2")
-//    implementation("org.koin:koin-androidx-viewmodel:2.2.2")
+
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.databinding:databinding-runtime:8.9.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
@@ -71,6 +75,8 @@ dependencies {
     val nav_version = "2.7.7"
     implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
     implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
+    
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
     
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

@@ -4,20 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.repository.IWeatherRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-data class WeatherUiState(
-    val weatherList: List<Response> = emptyList(),
-    val historyList: List<Response> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
-)
-
-class WeatherViewModel(
+@HiltViewModel
+class WeatherViewModel @Inject constructor(
     private val repository: IWeatherRepository
 ) : ViewModel() {
 
@@ -59,3 +55,10 @@ class WeatherViewModel(
         }
     }
 }
+
+data class WeatherUiState(
+    val weatherList: List<Response> = emptyList(),
+    val historyList: List<Response> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)

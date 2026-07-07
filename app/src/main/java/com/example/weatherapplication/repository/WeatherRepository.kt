@@ -2,8 +2,11 @@ package com.example.weatherapplication.repository
 
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.api.Service
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class WeatherRepository(
+@Singleton
+class WeatherRepository @Inject constructor(
     private val service: Service
 ) : IWeatherRepository {
 

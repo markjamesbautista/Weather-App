@@ -8,7 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.weatherapplication.R
 import com.example.weatherapplication.databinding.FragmentSignupBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SignUpFragment : Fragment() {
 
     private var _binding: FragmentSignupBinding? = null

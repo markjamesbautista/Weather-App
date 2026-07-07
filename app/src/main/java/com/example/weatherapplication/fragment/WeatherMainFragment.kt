@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -26,20 +27,19 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@AndroidEntryPoint
 class WeatherMainFragment : Fragment() {
 
     private var _binding: FragmentWeatherBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: WeatherViewModel by viewModel()
+    private val viewModel: WeatherViewModel by viewModels()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var sharedPref: SharedPreferences
     private var pagerAdapter: ViewpagerAdapter? = null
-
-    private var pendingSave = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -63,6 +63,9 @@ class WeatherMainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         sharedPref = requireActivity().getSharedPreferences("WEATHER_PREFS", Context.MODE_PRIVATE)
+
+        // Initialize history in ViewModel from disk
+        viewModel.initHistory(getSavedWeatherList().list)
 
         setupRefreshLayout()
         checkPermissionsAndGetLocation()
@@ -99,7 +102,6 @@ class WeatherMainFragment : Fragment() {
     }
 
     private fun fetchWeather() {
-        pendingSave = true
         getLocation()
     }
 
@@ -121,9 +123,10 @@ class WeatherMainFragment : Fragment() {
                 viewModel.uiState.collect { state ->
                     binding.swipeRefresh.isRefreshing = state.isLoading
                     
-                    if (!state.isLoading && state.weatherList.isNotEmpty()) {
-                        updateWeatherUI(state.weatherList, pendingSave)
-                        pendingSave = false
+                    if (state.weatherList.isNotEmpty()) {
+                        updateWeatherUI(state.weatherList, state.historyList)
+                        // Save history to disk whenever it changes
+                        saveWeatherList(WeatherList(state.historyList))
                     }
                     
                     binding.tvError.apply {
@@ -135,30 +138,16 @@ class WeatherMainFragment : Fragment() {
         }
     }
 
-    private fun updateWeatherUI(response: List<Response>, shouldSave: Boolean) {
-        val currentJson = Gson().toJson(WeatherList(response))
-        var savedList = getSavedWeatherList().list
-        
-        if (shouldSave) {
-            // Create a history entry with a high-resolution timestamp
-            val historyEntry = response.map { 
-                it.copy(dt = (System.currentTimeMillis() / 1000).toInt()) 
-            }
-            
-            // Prepend new items and take latest 50
-            val newList = (historyEntry + savedList).take(50)
-            saveWeatherList(WeatherList(newList))
-            savedList = newList
-        }
-            
-        val historyJson = Gson().toJson(WeatherList(savedList))
+    private fun updateWeatherUI(current: List<Response>, history: List<Response>) {
+        val currentJson = Gson().toJson(WeatherList(current))
+        val historyJson = Gson().toJson(WeatherList(history))
 
         if (pagerAdapter == null) {
             pagerAdapter = ViewpagerAdapter(this)
             binding.viewPager.apply {
                 adapter = pagerAdapter
                 offscreenPageLimit = 2
-                (getChildAt(0) as? View)?.overScrollMode = View.OVER_SCROLL_NEVER
+                getChildAt(0)?.overScrollMode = View.OVER_SCROLL_NEVER
                 
                 // Disable SwipeRefreshLayout when not on the first tab
                 registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
