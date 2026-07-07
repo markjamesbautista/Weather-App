@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import com.bumptech.glide.Glide
+import com.example.weatherapplication.R
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.databinding.AdapterWeatherItemListBinding
 
@@ -40,8 +41,29 @@ class WeatherRecyclerViewAdapter(
         holder.txtTemp.text = "${item.main.temp}°C"
         holder.txtSunrise.text = "Sunrise: ${getTime(item.sys.sunrise)}"
         holder.txtSunset.text = "Sunset: ${getTime(item.sys.sunset)}"
-        val image = "https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png"
-        Glide.with(context).load(image).into(holder.ivIcon);
+        
+        // Custom icon logic based on weather condition and time
+        val weatherMain = item.weather.firstOrNull()?.main ?: ""
+        val dt = item.dt.toLong()
+        val zoneId = ZoneId.of("Asia/Tokyo")
+        val hour = Instant.ofEpochSecond(dt).atZone(zoneId).hour
+
+        when {
+            weatherMain.contains("Rain", ignoreCase = true) -> {
+                holder.ivIcon.setImageResource(R.drawable.ic_rainy)
+            }
+            weatherMain.contains("Clear", ignoreCase = true) || weatherMain.contains("Sun", ignoreCase = true) -> {
+                if (hour >= 18 || hour < 6) {
+                    holder.ivIcon.setImageResource(R.drawable.ic_moon)
+                } else {
+                    holder.ivIcon.setImageResource(R.drawable.ic_sunny)
+                }
+            }
+            else -> {
+                val image = "https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png"
+                Glide.with(context).load(image).into(holder.ivIcon)
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

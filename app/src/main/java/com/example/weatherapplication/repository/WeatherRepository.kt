@@ -17,7 +17,7 @@ class WeatherRepository(
     }
 
     companion object {
-        private const val APP_ID = "test"
+        private const val APP_ID = "5d16800884cd194ba108308758b66725"
         private const val METRIC = "metric"
     }
 }
