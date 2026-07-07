@@ -11,50 +11,58 @@ import com.example.weatherapplication.api.WeatherList
 import com.example.weatherapplication.databinding.FragmentWeatherListBinding
 import com.google.gson.Gson
 
-
-/**
- * A fragment representing a list of Items.
- */
 class WeatherListFragment : Fragment() {
 
+    private var _binding: FragmentWeatherListBinding? = null
+    private val binding get() = _binding!!
+
     private var weatherList: WeatherList = WeatherList()
-    private lateinit var binding: FragmentWeatherListBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         arguments?.let {
-            weatherList = Gson().fromJson(it.getString(RESPONSE), WeatherList::class.java)
+            val json = it.getString(ARG_WEATHER_JSON)
+            if (!json.isNullOrEmpty()) {
+                weatherList = Gson().fromJson(json, WeatherList::class.java)
+            }
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentWeatherListBinding.inflate(layoutInflater)
-
+    ): View {
+        _binding = FragmentWeatherListBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+    }
+
+    private fun setupRecyclerView() {
+        val weatherAdapter = WeatherRecyclerViewAdapter()
         binding.list.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = WeatherRecyclerViewAdapter(weatherList.list, context)
+            adapter = weatherAdapter
         }
+        weatherAdapter.submitList(weatherList.list)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {
+        private const val ARG_WEATHER_JSON = "arg_weather_json"
 
-        // TODO: Customize parameter argument names
-        const val RESPONSE = "response"
-
-        // TODO: Customize parameter initialization
         @JvmStatic
-        fun newInstance(response: String) =
+        fun newInstance(weatherJson: String) =
             WeatherListFragment().apply {
                 arguments = Bundle().apply {
-                    putString(RESPONSE, response)
+                    putString(ARG_WEATHER_JSON, weatherJson)
                 }
             }
     }

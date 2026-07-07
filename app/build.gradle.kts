@@ -65,6 +65,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.databinding:databinding-runtime:8.9.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Navigation
     val nav_version = "2.7.7"

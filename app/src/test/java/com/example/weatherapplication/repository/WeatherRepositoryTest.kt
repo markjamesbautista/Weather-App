@@ -26,11 +26,13 @@ class WeatherRepositoryTest {
         val lat = 10.0
         val lon = 20.0
         val mockResponse = Response(name = "Test City")
+        val apiKey = "5d16800884cd194ba108308758b66725"
+        
         coEvery { 
             service.getWeather(
                 lat = lat,
                 long = lon,
-                appId = "test",
+                appId = apiKey,
                 unit = "metric"
             ) 
         } returns mockResponse
@@ -44,7 +46,7 @@ class WeatherRepositoryTest {
             service.getWeather(
                 lat = lat,
                 long = lon,
-                appId = "test",
+                appId = apiKey,
                 unit = "metric"
             ) 
         }

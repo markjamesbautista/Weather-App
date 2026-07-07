@@ -1,27 +1,18 @@
 package com.example.weatherapplication.adapter
 
-import android.content.Context
-import android.os.Build
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.annotation.RequiresApi
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.weatherapplication.R
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.databinding.AdapterWeatherItemListBinding
+import com.example.weatherapplication.utils.WeatherTimeUtils
 
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
-class WeatherRecyclerViewAdapter(
-    private val values: List<Response>,
-    private val context: Context
-) : RecyclerView.Adapter<WeatherRecyclerViewAdapter.ViewHolder>() {
+class WeatherRecyclerViewAdapter : 
+    ListAdapter<Response, WeatherRecyclerViewAdapter.ViewHolder>(WeatherDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -29,71 +20,61 @@ class WeatherRecyclerViewAdapter(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
-            ))
-
+            )
+        )
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = values[position]
-        holder.txtLocation.text = "${item.name}, ${item.sys.country}"
-        holder.txtTemp.text = "${item.main.temp}°C"
-        holder.txtSunrise.text = "Sunrise: ${getTime(item.sys.sunrise)}"
-        holder.txtSunset.text = "Sunset: ${getTime(item.sys.sunset)}"
-        
-        // Custom icon logic based on weather condition and time
-        val weatherMain = item.weather.firstOrNull()?.main ?: ""
-        val dt = item.dt.toLong()
-        val zoneId = ZoneId.of("Asia/Tokyo")
-        val hour = Instant.ofEpochSecond(dt).atZone(zoneId).hour
+        holder.bind(getItem(position))
+    }
 
-        when {
-            weatherMain.contains("Rain", ignoreCase = true) -> {
-                holder.ivIcon.setImageResource(R.drawable.ic_rainy)
-            }
-            weatherMain.contains("Clear", ignoreCase = true) || weatherMain.contains("Sun", ignoreCase = true) -> {
-                if (hour >= 18 || hour < 6) {
-                    holder.ivIcon.setImageResource(R.drawable.ic_moon)
-                } else {
-                    holder.ivIcon.setImageResource(R.drawable.ic_sunny)
+    inner class ViewHolder(private val binding: AdapterWeatherItemListBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: Response) {
+            binding.apply {
+                txtLocation.text = "${item.name}, ${item.sys.country}"
+                txtTemp.text = "${item.main.temp}°C"
+                
+                txtDate.text = WeatherTimeUtils.getFormattedDate(item.dt.toLong(), item.timezone)
+                txtSunrise.text = "Sunrise: ${WeatherTimeUtils.getTime(item.sys.sunrise.toLong(), item.timezone)}"
+                txtSunset.text = "Sunset: ${WeatherTimeUtils.getTime(item.sys.sunset.toLong(), item.timezone)}"
+
+                val weatherMain = item.weather.firstOrNull()?.main ?: ""
+                
+                // Precise day/night logic based on sunrise/sunset timestamps
+                val isDay = WeatherTimeUtils.isDay(item.dt.toLong(), item.sys.sunrise, item.sys.sunset)
+
+                when {
+                    weatherMain.contains("Rain", ignoreCase = true) -> {
+                        icon.setImageResource(R.drawable.ic_rainy)
+                    }
+                    weatherMain.contains("Clear", ignoreCase = true) || 
+                    weatherMain.contains("Sun", ignoreCase = true) -> {
+                        if (!isDay) {
+                            icon.setImageResource(R.drawable.ic_moon)
+                        } else {
+                            icon.setImageResource(R.drawable.ic_sunny)
+                        }
+                    }
+                    else -> {
+                        val iconCode = item.weather.firstOrNull()?.icon
+                        val imageUrl = "https://openweathermap.org/img/wn/$iconCode@2x.png"
+                        Glide.with(root.context).load(imageUrl).into(icon)
+                    }
                 }
             }
-            else -> {
-                val image = "https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png"
-                Glide.with(context).load(image).into(holder.ivIcon)
-            }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun dateTime(time: Double, format: String = "K:mm a"): String {
-        // parse the time zone
-        val zoneId = ZoneId.of("Asia/Tokyo")
-        // create a moment in time from the given timestamp (in seconds!)
-        val instant = Instant.ofEpochSecond(time.toLong())
-        // define a formatter using the given pattern and a Locale
-        val formatter = DateTimeFormatter.ofPattern(format, Locale.ENGLISH)
-        // then make the moment in time consider the zone and return the formatted String
-        return instant.atZone(zoneId).format(formatter)
-    }
-
-    private fun getTime(time: Double): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            dateTime(time)
-        } else {
-            time.toString()
+    class WeatherDiffCallback : DiffUtil.ItemCallback<Response>() {
+        override fun areItemsTheSame(oldItem: Response, newItem: Response): Boolean {
+            // For history, items are the same if it's the same city at the same time
+            return oldItem.id == newItem.id && oldItem.dt == newItem.dt
         }
-    }
 
-    override fun getItemCount(): Int = values.size
-
-    inner class ViewHolder(binding: AdapterWeatherItemListBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        val txtLocation: TextView = binding.txtLocation
-        val txtTemp: TextView = binding.txtTemp
-        val txtSunrise: TextView = binding.txtSunrise
-        val txtSunset: TextView = binding.txtSunset
-        val ivIcon: ImageView = binding.icon
+        override fun areContentsTheSame(oldItem: Response, newItem: Response): Boolean {
+            return oldItem == newItem
+        }
     }
 }

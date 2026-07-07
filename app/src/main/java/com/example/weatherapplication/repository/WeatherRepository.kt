@@ -8,16 +8,6 @@ class WeatherRepository(
 ) : IWeatherRepository {
 
     override suspend fun getWeather(lat: Double, long: Double): Response {
-        return service.getWeather(
-            lat = lat,
-            long = long,
-            unit = METRIC,
-            appId = APP_ID
-        )
-    }
-
-    companion object {
-        private const val APP_ID = "test"
-        private const val METRIC = "metric"
+        return service.getWeather(lat, long)
     }
 }

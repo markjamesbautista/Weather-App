@@ -4,31 +4,57 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.repository.IWeatherRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+data class WeatherUiState(
+    val weatherList: List<Response> = emptyList(),
+    val historyList: List<Response> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
 
 class WeatherViewModel(
     private val repository: IWeatherRepository
 ) : ViewModel() {
 
-    private val _responseModel = MutableStateFlow((listOf<Response>()))
-    val responseModel = _responseModel.asStateFlow()
+    private val _uiState = MutableStateFlow(WeatherUiState())
+    val uiState = _uiState.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error = _error.asStateFlow()
+    fun initHistory(history: List<Response>) {
+        _uiState.update { it.copy(historyList = history) }
+    }
 
-    fun getWeather(lat: Double, long: Double){
-        viewModelScope.launch(Dispatchers.IO) {
+    fun getWeather(lat: Double, long: Double) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                _error.value = null
                 val result = repository.getWeather(lat, long)
-                _responseModel.value = listOf(result)
+                
+                // Create a unique entry using current system time.
+                // Using this for BOTH tabs ensures the ViewPager2 detects a change 
+                // and refreshes the "Current Weather" display immediately.
+                val updatedResult = result.copy(dt = (System.currentTimeMillis() / 1000).toInt())
+                
+                _uiState.update { state ->
+                    val newHistory = (listOf(updatedResult) + state.historyList).take(50)
+                    state.copy(
+                        weatherList = listOf(updatedResult),
+                        historyList = newHistory,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Error fetching weather")
-                _error.value = e.localizedMessage ?: "An unknown error occurred"
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        errorMessage = e.localizedMessage ?: "An unknown error occurred"
+                    ) 
+                }
             }
         }
     }

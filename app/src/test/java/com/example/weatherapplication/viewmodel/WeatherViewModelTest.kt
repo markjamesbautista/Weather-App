@@ -13,6 +13,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -35,27 +38,62 @@ class WeatherViewModelTest {
     }
 
     @Test
-    fun `getWeather should update responseModel with repository result`() = runTest {
+    fun `getWeather should update uiState with result on success`() = runTest {
         // Given
         val lat = 10.0
         val lon = 20.0
         val mockResponse = Response(name = "Test City")
         coEvery { repository.getWeather(lat, lon) } returns mockResponse
 
-        // When
-        viewModel.getWeather(lat, lon)
+        // Then
+        viewModel.uiState.test {
+            // Initial state
+            val initialState = awaitItem()
+            assertEquals(0, initialState.weatherList.size)
+            assertFalse(initialState.isLoading)
+            assertNull(initialState.errorMessage)
+
+            // When
+            viewModel.getWeather(lat, lon)
+
+            // Skip loading state if using UnconfinedTestDispatcher it might emit quickly
+            var state = awaitItem()
+            if (state.isLoading) {
+                state = awaitItem()
+            }
+
+            assertEquals(1, state.weatherList.size)
+            assertEquals("Test City", state.weatherList[0].name)
+            assertFalse(state.isLoading)
+            assertNull(state.errorMessage)
+            
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getWeather should update uiState with error on failure`() = runTest {
+        // Given
+        val lat = 10.0
+        val lon = 20.0
+        val errorMessage = "Network Error"
+        coEvery { repository.getWeather(lat, lon) } throws Exception(errorMessage)
 
         // Then
-        viewModel.responseModel.test {
-            // Turbine will catch the values. 
-            // The first value is the initial empty list.
-            val initial = awaitItem()
-            assertEquals(0, initial.size)
+        viewModel.uiState.test {
+            awaitItem() // Initial
 
-            // The second value should be the one from the repository
-            val result = awaitItem()
-            assertEquals(1, result.size)
-            assertEquals("Test City", result[0].name)
+            // When
+            viewModel.getWeather(lat, lon)
+
+            var state = awaitItem()
+            if (state.isLoading) {
+                state = awaitItem()
+            }
+
+            assertEquals(0, state.weatherList.size)
+            assertFalse(state.isLoading)
+            assertEquals(errorMessage, state.errorMessage)
             
             cancelAndIgnoreRemainingEvents()
         }
