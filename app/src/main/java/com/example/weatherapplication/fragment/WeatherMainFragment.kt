@@ -3,7 +3,6 @@ package com.example.weatherapplication.fragment
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -38,7 +37,6 @@ class WeatherMainFragment : Fragment() {
     
     private val viewModel: WeatherViewModel by viewModels()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var sharedPref: SharedPreferences
     private var pagerAdapter: ViewpagerAdapter? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -62,10 +60,6 @@ class WeatherMainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        sharedPref = requireActivity().getSharedPreferences("WEATHER_PREFS", Context.MODE_PRIVATE)
-
-        // Initialize history in ViewModel from disk
-        viewModel.initHistory(getSavedWeatherList().list)
 
         setupRefreshLayout()
         checkPermissionsAndGetLocation()
@@ -123,10 +117,8 @@ class WeatherMainFragment : Fragment() {
                 viewModel.uiState.collect { state ->
                     binding.swipeRefresh.isRefreshing = state.isLoading
                     
-                    if (state.weatherList.isNotEmpty()) {
+                    if (state.weatherList.isNotEmpty() || state.historyList.isNotEmpty()) {
                         updateWeatherUI(state.weatherList, state.historyList)
-                        // Save history to disk whenever it changes
-                        saveWeatherList(WeatherList(state.historyList))
                     }
                     
                     binding.tvError.apply {
@@ -168,19 +160,6 @@ class WeatherMainFragment : Fragment() {
         }
 
         pagerAdapter?.updateData(currentJson, historyJson)
-    }
-
-    private fun saveWeatherList(weatherList: WeatherList) {
-        sharedPref.edit().putString("saved_weather", Gson().toJson(weatherList)).apply()
-    }
-
-    private fun getSavedWeatherList(): WeatherList {
-        val json = sharedPref.getString("saved_weather", "") ?: ""
-        return if (json.isNotEmpty()) {
-            Gson().fromJson(json, WeatherList::class.java)
-        } else {
-            WeatherList()
-        }
     }
 
     override fun onDestroyView() {
