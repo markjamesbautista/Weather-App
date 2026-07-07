@@ -56,9 +56,19 @@ class WeatherMainFragment : Fragment() {
         locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         getLocation()
         sharedPref = requireActivity().getSharedPreferences("TESTER", Context.MODE_PRIVATE)
+        
         viewModel.responseModel.collectOnStart(viewLifecycleOwner) {
             if (it.isNotEmpty()) {
                 setUpViewPager(it)
+            }
+        }
+
+        viewModel.error.collectOnStart(viewLifecycleOwner) { errorMessage ->
+            if (errorMessage != null) {
+                binding.tvError.visibility = View.VISIBLE
+                binding.tvError.text = errorMessage
+            } else {
+                binding.tvError.visibility = View.GONE
             }
         }
     }
