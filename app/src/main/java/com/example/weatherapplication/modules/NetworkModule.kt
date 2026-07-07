@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val API_KEY = "5d16800884cd194ba108308758b66725"
+    private const val API_KEY = "your_api_key"
     private const val UNITS = "metric"
 
     @Provides
