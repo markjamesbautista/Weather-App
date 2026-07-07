@@ -1,19 +1,19 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("androidx.navigation.safeargs.kotlin")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.navigation.safeargs)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
-
 
 android {
     namespace = "com.example.weatherapplication"
-    compileSdk = 34
+    compileSdk = 36
 
     buildFeatures {
         viewBinding = true
     }
+
     defaultConfig {
         applicationId = "com.example.weatherapplication"
         minSdk = 24
@@ -43,50 +43,47 @@ android {
 }
 
 dependencies {
+    // Core & UI
+    implementation(libs.androidx.coreKtx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragmentKtx)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.androidx.swiperefreshlayout)
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.legacy:legacy-support-v4:1.0.0")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0")
-    implementation("androidx.viewpager2:viewpager2:1.0.0")
-    
-    // Hilt - Using KSP to fix JDK 17 compatibility and aligned with root project version
-    val hilt_version = "2.51.1"
-    implementation("com.google.dagger:hilt-android:$hilt_version")
-    ksp("com.google.dagger:hilt-android-compiler:$hilt_version")
-    
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    implementation("com.jakewharton.timber:timber:5.0.1")
+    // Architecture Components (Lifecycle & Navigation)
+    implementation(libs.androidx.lifecycleRuntime)
+    implementation(libs.androidx.lifecycleViewModel)
+    implementation(libs.androidx.lifecycleLiveData)
+    implementation(libs.androidx.navigationFragment)
+    implementation(libs.androidx.navigationUi)
 
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.databinding:databinding-runtime:8.9.1")
-    implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    // Dependency Injection (Hilt)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
-    // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    // Networking & Serialization
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converterGson)
+    implementation(libs.retrofit.serializationConverter)
+    implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.serializationJson)
 
-    // Navigation
-    val nav_version = "2.7.7"
-    implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
-    implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
-    
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-    
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("io.mockk:mockk:1.13.8")
-    testImplementation("app.cash.turbine:turbine:1.0.0")
+    // Storage & Utilities
+    implementation(libs.androidx.datastorePreferences)
+    implementation(libs.glide)
+    implementation(libs.timber)
+    implementation(libs.play.services.location)
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // Local Unit Tests
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutinesTest)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
 
+    // Instrumented Tests
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espressoCore)
 }
