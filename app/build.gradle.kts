@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
 }
@@ -9,10 +8,6 @@ plugins {
 android {
     namespace = "com.example.weatherapplication"
     compileSdk = 36
-
-    buildFeatures {
-        viewBinding = true
-    }
 
     defaultConfig {
         applicationId = "com.example.weatherapplication"
@@ -22,6 +17,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -40,25 +38,39 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
-    // Core & UI
+    // Core
     implementation(libs.androidx.coreKtx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.fragmentKtx)
-    implementation(libs.androidx.viewpager2)
-    implementation(libs.androidx.swiperefreshlayout)
-
-    // Architecture Components (Lifecycle & Navigation)
-    implementation(libs.androidx.lifecycleRuntime)
-    implementation(libs.androidx.lifecycleViewModel)
-    implementation(libs.androidx.lifecycleLiveData)
-    implementation(libs.androidx.navigationFragment)
-    implementation(libs.androidx.navigationUi)
+    
+    // Compose
+    val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.coil.compose)
 
     // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
@@ -73,7 +85,6 @@ dependencies {
 
     // Storage & Utilities
     implementation(libs.androidx.datastorePreferences)
-    implementation(libs.glide)
     implementation(libs.timber)
     implementation(libs.play.services.location)
 
@@ -86,4 +97,7 @@ dependencies {
     // Instrumented Tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espressoCore)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
