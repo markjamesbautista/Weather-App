@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit,
+    onLoginClick: (String, String) -> Unit,
     onSignUpClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -28,7 +28,7 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Login",
+            text = "Weather App Login",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -58,7 +58,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onLoginClick,
+            onClick = { onLoginClick(email, password) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Login")
@@ -66,11 +66,11 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedButton(
+        TextButton(
             onClick = onSignUpClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Sign Up")
+            Text(text = "Don't have an account? Sign Up")
         }
     }
 }
