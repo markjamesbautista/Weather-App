@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SignUpScreen(
-    onConfirmClick: () -> Unit
+    onConfirmClick: (String, String, String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -65,10 +65,11 @@ fun SignUpScreen(
             singleLine = true
         )
 
+        // Note: confirming with email/pass from fields
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = onConfirmClick,
+            onClick = { onConfirmClick(name, email, password) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Confirm")

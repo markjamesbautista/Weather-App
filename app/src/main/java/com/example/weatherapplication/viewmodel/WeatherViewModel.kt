@@ -5,12 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.weatherapplication.api.Response
 import com.example.weatherapplication.api.WeatherList
 import com.example.weatherapplication.data.WeatherDataStore
+import com.example.weatherapplication.data.local.toEntity
 import com.example.weatherapplication.repository.IWeatherRepository
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -25,23 +24,34 @@ data class WeatherUiState(
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: IWeatherRepository,
-    private val dataStore: WeatherDataStore
+    private val dataStore: WeatherDataStore,
+    private val gson: Gson
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        // Automatically load history from DataStore on startup
-        observeHistory()
+        // Load history from Room
+        observeRoomHistory()
+        // We still keep DataStore for simple prefs or other lightweight data if needed,
+        // but here we demonstrate using both by loading initial status from DataStore
+        // or keeping them in sync. For this task, we will load Room history into historyList.
     }
 
-    private fun observeHistory() {
-        viewModelScope.launch {
-            dataStore.weatherHistoryFlow.collectLatest { history ->
-                _uiState.update { it.copy(historyList = history.list) }
+    private fun observeRoomHistory() {
+        repository.getWeatherHistory()
+            .onEach { entities ->
+                val history = entities.mapNotNull { entity ->
+                    try {
+                        gson.fromJson(entity.rawJson, Response::class.java)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                _uiState.update { it.copy(historyList = history) }
             }
-        }
+            .launchIn(viewModelScope)
     }
 
     fun getWeather(lat: Double, long: Double) {
@@ -50,21 +60,22 @@ class WeatherViewModel @Inject constructor(
             try {
                 val result = repository.getWeather(lat, long)
                 
-                // Use current time for dt to ensure BOTH current weather and history 
-                // detect a change on every refresh, triggering the UI to update.
+                // Use current time for dt
                 val updatedResult = result.copy(dt = (System.currentTimeMillis() / 1000).toInt())
+                val rawJson = gson.toJson(updatedResult)
                 
+                // Save to Room
+                repository.insertWeatherToHistory(updatedResult.toEntity(rawJson))
+                
+                // Also save to DataStore as requested (demonstrating both)
                 _uiState.update { state ->
                     val newHistoryList = (listOf(updatedResult) + state.historyList).take(50)
-                    
-                    // Save to DataStore asynchronously
                     viewModelScope.launch {
                         dataStore.saveWeatherHistory(WeatherList(newHistoryList))
                     }
 
                     state.copy(
                         weatherList = listOf(updatedResult),
-                        historyList = newHistoryList,
                         isLoading = false
                     )
                 }
@@ -77,6 +88,13 @@ class WeatherViewModel @Inject constructor(
                     ) 
                 }
             }
+        }
+    }
+    
+    fun clearHistory() {
+        viewModelScope.launch {
+            repository.clearWeatherHistory()
+            dataStore.saveWeatherHistory(WeatherList(emptyList()))
         }
     }
 }
