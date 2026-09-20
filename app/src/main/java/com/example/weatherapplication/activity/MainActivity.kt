@@ -19,8 +19,6 @@ import com.example.weatherapplication.ui.screens.SignUpScreen
 import com.example.weatherapplication.ui.screens.WeatherMainScreen
 import com.example.weatherapplication.ui.theme.WeatherApplicationTheme
 import com.example.weatherapplication.viewmodel.AuthViewModel
-import com.example.weatherapplication.viewmodel.WeatherViewModel
-import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -28,8 +26,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
             WeatherApplicationTheme {
@@ -37,17 +33,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    WeatherAppNavigation(
-                        fetchLocation = { viewModel ->
-                            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                                val lat = location?.latitude ?: 14.9968
-                                val lon = location?.longitude ?: 121.1710
-                                viewModel.getWeather(lat, lon)
-                            }.addOnFailureListener {
-                                viewModel.getWeather(14.9968, 121.1710)
-                            }
-                        }
-                    )
+                    WeatherAppNavigation()
                 }
             }
         }
