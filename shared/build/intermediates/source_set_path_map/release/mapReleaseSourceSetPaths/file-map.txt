@@ -1,0 +1,9 @@
+com.example.weatherapplication.shared-pngs-0 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\build\generated\res\pngs\release
+com.example.weatherapplication.shared-resValues-1 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\build\generated\res\resValues\release
+com.example.weatherapplication.shared-mergeReleaseResources-2 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\build\intermediates\incremental\release\mergeReleaseResources\merged.dir
+com.example.weatherapplication.shared-mergeReleaseResources-3 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\build\intermediates\incremental\release\mergeReleaseResources\stripped.dir
+com.example.weatherapplication.shared-release-4 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\build\intermediates\merged_res\release\mergeReleaseResources
+com.example.weatherapplication.shared-androidMain-5 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\src\androidMain\res
+com.example.weatherapplication.shared-androidRelease-6 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\src\androidRelease\res
+com.example.weatherapplication.shared-main-7 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\src\main\res
+com.example.weatherapplication.shared-release-8 C:\Users\ADMIN\AndroidStudioProjects\Weather-App - Compose - KMP\shared\src\release\res
